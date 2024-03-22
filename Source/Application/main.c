@@ -309,11 +309,14 @@ int main(void) {
 			data.gX = scaledAccelX_;
 			data.gY = scaledAccelY_;
 			data.gZ = scaledAccelZ_;
+			data.Vin_min = getVmin();
+
 			for (int i = 0; i < 3; i++) {
 				if (protocol_getRxData(i) == 1) {
 					data.reg[i] = protocol_regs(i);
+					data.trackState[i] = 1;
 				}else{
-					//здесь можно поставить флаг отсутствия связи с гусеницей
+					data.trackState[i] = 0; //здесь можно поставить флаг отсутствия связи с гусеницей
 				}
 
 			}

@@ -48,6 +48,8 @@ static int rx_flag[3]={0,0,0};
 
 tack_regs_t regs[3];
 
+static int Vmin=0;
+
 void protocol_init(void) {
 	eMBMasterInit(MB_RTU, 0,				//Not Used
 			115200,			// Baud
@@ -135,13 +137,17 @@ bool protocol_read(void) {
 	return true;
 }
 
+int getVmin(void){
+	return Vmin;
+}
+
 protocol_state_t protocol_process(void) {
 	USHORT* data_ptr;
 	eMBMasterPoll();
 	switch (p_state) {
 	case pm_read:
 		dev_adr = FIRST_MODBUS_ADR;
-		eMBMasterReqReadHoldingRegister(dev_adr, 20, 4, 100);
+		eMBMasterReqReadHoldingRegister(dev_adr, 20, 7, 100);
 		delay_time = getTime_ms() + REPEAT_TIME;
 		repeat_count = 0;
 		p_state = pm_read_cmlt;
@@ -151,7 +157,16 @@ protocol_state_t protocol_process(void) {
 			regs[dev_adr-FIRST_MODBUS_ADR].cur=usMRegHoldBuf[dev_adr-1][20];
 			regs[dev_adr-FIRST_MODBUS_ADR].curLimit=usMRegHoldBuf[dev_adr-1][21];
 			regs[dev_adr-FIRST_MODBUS_ADR].step=usMRegHoldBuf[dev_adr-1][22];
-			regs[dev_adr-FIRST_MODBUS_ADR].res=usMRegHoldBuf[dev_adr-1][23];
+			regs[dev_adr-FIRST_MODBUS_ADR].HallTicks=usMRegHoldBuf[dev_adr-1][24] + 65536 * usMRegHoldBuf[dev_adr-1][25];
+			if(dev_adr == FIRST_MODBUS_ADR)
+                { Vmin = usMRegHoldBuf[dev_adr-1][23];}
+            else
+				{
+				if(Vmin > usMRegHoldBuf[dev_adr-1][23])
+					{ Vmin = usMRegHoldBuf[dev_adr-1][23];}
+				}
+            regs[dev_adr-FIRST_MODBUS_ADR].pwmLimitFlag = usMRegHoldBuf[dev_adr-1][26];
+
 			rx_flag[dev_adr-FIRST_MODBUS_ADR]=1;
 			dev_adr++;
 			if (dev_adr > LAST_MODBUS_ADR) {
