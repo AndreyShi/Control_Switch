@@ -172,14 +172,14 @@ protocol_state_t protocol_process(void) {
 			if (dev_adr > LAST_MODBUS_ADR) {
 				p_state = pm_ready;
 			} else {
-				eMBMasterReqReadHoldingRegister(dev_adr, 20, 4, 100);
+				eMBMasterReqReadHoldingRegister(dev_adr, 20, 7, 100);
 				delay_time = getTime_ms() + REPEAT_TIME;
 				repeat_count = 0;
 			}
 		} else if (eMBMasterWaitRequestFinish() != MB_MRE_MASTER_BUSY) {
 			if (getTime_ms() >= delay_time) {
 				if (repeat_count < MAX_REPEAT_COUNT) {
-					eMBMasterReqReadHoldingRegister(dev_adr, 20, 4, 100);
+					eMBMasterReqReadHoldingRegister(dev_adr, 20, 7, 100);
 					repeat_count++;
 					delay_time = getTime_ms() + REPEAT_TIME;
 				} else {
@@ -189,7 +189,7 @@ protocol_state_t protocol_process(void) {
 					if (dev_adr > LAST_MODBUS_ADR) {
 						p_state = pm_ready;
 					} else {
-						eMBMasterReqReadHoldingRegister(dev_adr, 20, 4, 100);
+						eMBMasterReqReadHoldingRegister(dev_adr, 20, 7, 100);
 						delay_time = getTime_ms() + REPEAT_TIME;
 						repeat_count = 0;
 					}
@@ -209,12 +209,9 @@ protocol_state_t protocol_process(void) {
 	case pm_error:
 		break;
 	case pm_write:
-		eMBMasterReqWriteMultipleHoldingRegister(dev_adr,
-				regAdr, regSize, (USHORT*) track_data.data,
-				10);
+		eMBMasterReqWriteMultipleHoldingRegister(dev_adr,regAdr, regSize, (USHORT*) track_data.data,10);
 		delay_time = getTime_ms() + REPEAT_TIME;
 		p_state = pm_write_cmplt;
-
 		break;
 	case pm_ready:
 		break;
