@@ -36,11 +36,11 @@ void track_update_speed(uint16_t speed, float* kSpeed) {
 	track_data.reg_adr = MOVE_SPEED_REG_ADR;
 	track_data.size = 1;
 
-	for (int j = 0; j < 3; j++) {
+	for (int j = 0; j < TRACKS; j++) {
 		track_data.modbus_adr = FIRST_MODBUS_ADR + j;
 		cSpeed=(float) speed * kSpeed[j] + 0.5;
 		siPtr[0] = cSpeed;
-		for (int i = 0; i < 3; i++) {
+		for (int i = 0; i < 1; i++) {
 			protocol_write();
 			delay = LocalTime + 100;
 			while (1) {
@@ -63,7 +63,7 @@ void track_update_scan_speed(uint16_t speed,float* kSpeed) {
 	track_data.reg_adr = SCAN_SPEED_REG_ADR;
 	track_data.size = 1;
 
-	for (int j = 0; j < 3; j++) {
+	for (int j = 0; j < TRACKS; j++) {
 		track_data.modbus_adr = FIRST_MODBUS_ADR + j;
 		cSpeed=(float) speed * kSpeed[j] + 0.5;
 		siPtr[0] = cSpeed;
@@ -90,7 +90,7 @@ void track_update_step(uint16_t step, float* kSpeed) {
 	track_data.reg_adr = SCAN_STEP_REG_ADR;
 	track_data.size = 1;
 
-	for (int j = 0; j < 3; j++) {
+	for (int j = 0; j < TRACKS; j++) {
 		track_data.modbus_adr = FIRST_MODBUS_ADR + j;
 		siPtr[0] = (float) step * kSpeed[j] + 0.5;
 		for (int i = 0; i < 3; i++) {
@@ -116,7 +116,7 @@ void track_update_acs(uint16_t acs, float* kAcs) {
 	track_data.reg_adr = ACS_RISE_REG_ADR;
 	track_data.size = 1;
 
-	for (int j = 0; j < 3; j++) {
+	for (int j = 0; j < TRACKS; j++) {
 		track_data.modbus_adr = FIRST_MODBUS_ADR + j;
 		siPtr[0] = (float) acs * kAcs[j] + 0.5;
 		for (int i = 0; i < 3; i++) {
@@ -143,7 +143,7 @@ void track_update_Ilimit(uint16_t* Ilimit) {
 	track_data.reg_adr = I_LIMIT_REG_ADR;
 	track_data.size = 1;
 
-	for (int j = 0; j < 3; j++) {
+	for (int j = 0; j < TRACKS; j++) {
 		track_data.modbus_adr = FIRST_MODBUS_ADR + j;
 		siPtr[0] = Ilimit[j];
 		for (int i = 0; i < 3; i++) {
