@@ -78,7 +78,7 @@ static volatile UCHAR  ucMasterRTURcvBuf[MB_SER_PDU_SIZE_MAX];
 static volatile USHORT usMasterSendPDULength;
 
 static volatile UCHAR *pucMasterSndBufferCur;
-static volatile USHORT usMasterSndBufferCount;
+volatile USHORT usMasterSndBufferCount;
 
 static volatile USHORT usMasterRcvBufferPos;
 static volatile BOOL   xFrameIsBroadcast = FALSE;
@@ -326,7 +326,8 @@ xMBMasterRTUTransmitFSM( void )
             xFrameIsBroadcast = ( ucMasterRTUSndBuf[MB_SER_PDU_ADDR_OFF] == MB_ADDRESS_BROADCAST ) ? TRUE : FALSE;
             /* Disable transmitter. This prevents another transmit buffer
              * empty interrupt. */
-            //vMBMasterPortSerialEnable( TRUE, FALSE );
+            //vMBMasterPortSerialEnable( TRUE, FALSE ); переключаемся на прием в прерывании по флагу USART_SR_TC
+            //теперь ждем появления USART_SR_TC, как это происходит если мы очистили флаг TXE?
             eSndState = STATE_M_TX_XFWR;
             /* If the frame is broadcast ,master will enable timer of convert delay,
              * else master will enable timer of respond timeout. */

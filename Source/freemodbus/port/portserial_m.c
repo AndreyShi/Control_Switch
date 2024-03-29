@@ -36,7 +36,13 @@
 /* ----------------------- static functions ---------------------------------*/
 
 
+char isr_test[1000];
+int isr_test_i;
 
+#define set_test_i(x)  do{      \
+if(isr_test_i < 1000)           \
+{isr_test[isr_test_i++] = x;}   \
+}while(0);                      \
 
 
 
@@ -139,7 +145,7 @@ BOOL xMBMasterPortSerialInit(UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits,
 
 void vMBMasterPortSerialEnable(BOOL xRxEnable, BOOL xTxEnable)
 {
-
+//set_test_i('f');
 	if (xRxEnable) {
 		SET_BIT(RS485_PORT->CR1, USART_CR1_RXNEIE);
 	} else {
@@ -183,22 +189,39 @@ BOOL xMBMasterPortSerialGetByte(CHAR * pucByte)
 
 
 
-
 void xMBPortSerial_IRQHandler(void) {
 	uint32_t isrflags = RS485_PORT->SR;
 
 	if ((isrflags & USART_SR_RXNE) != RESET) {
 		//USART_ClearITPendingBit( USART3, USART_IT_RXNE );
 		pxMBMasterFrameCBByteReceived();
+		set_test_i('b');
+		return;
 	}
 	if ((isrflags & USART_SR_TC) != RESET) {
 		/* Clear the TC flag in the SR register by writing 0 to it */
 		USART_ClearFlag(RS485_PORT, USART_FLAG_TC);
 		//pxMBFrameCBTransmitterEmpty();
+		set_test_i('a');
 		vMBMasterPortSerialEnable( TRUE, FALSE);
+		return;
 	}
 	if ((isrflags & USART_SR_TXE) != RESET) {
-		USART_ClearFlag(RS485_PORT, USART_FLAG_TXE);
+		extern volatile USHORT usMasterSndBufferCount;		
+
+		if(usMasterSndBufferCount > 0)
+		    {set_test_i(usMasterSndBufferCount);}
+		else
+		    {set_test_i(-1);}
+
+		if( usMasterSndBufferCount == 0 )
+		    {
+				CLEAR_BIT(RS485_PORT->CR1, USART_CR1_TXEIE);
+			}
+		else
+		    {
+				USART_ClearFlag(RS485_PORT, USART_FLAG_TXE);
+			}
 		pxMBMasterFrameCBTransmitterEmpty();
 	}
 }
