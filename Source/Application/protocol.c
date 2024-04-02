@@ -15,7 +15,9 @@
 
 
 #define REPEAT_TIME			100
-#define MAX_REPEAT_COUNT	5
+// REPEAT_TIME 5 * MAX_REPEAT_COUNT + 100 = 0.6s отсутствие гусеницы, если делать больше то надо учитывать время опроса stop_time
+// в track_bldc оно равно 2s, к примеру если MAX_REPEAT_COUNT = 8 ,то две гусеницы нет связи пауза опроса для одной гусеницы будет 1.8s 
+#define MAX_REPEAT_COUNT	8  
 
 #define M_REG_HOLDING_START				0x00
 #define M_REG_HOLDING_NREGS				40
@@ -96,11 +98,7 @@ tack_regs_t protocol_regs(uint32_t num){
 }
 
 int protocol_getRxData(int track){
-	if (rx_flag[track]==1){
-		//rx_flag[track]=0;
-		return 1;
-	}
-	return 0;
+	return rx_flag[track];
 }
 
 bool protocol_write(void) {

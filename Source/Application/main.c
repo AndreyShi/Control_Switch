@@ -150,7 +150,7 @@ int main(void) {
 
 	Delay_ms(10);
 	coef.scan_speed = 300;
-	coef.move_speed = 300;
+	coef.move_speed = 200;
 	coef.scan_step = 300;
 	coef.kSpeed[0] = 1;
 	coef.kSpeed[1] = 1;
@@ -312,10 +312,7 @@ int main(void) {
 			data.Vin_min = getVmin();
 
 			for (int i = 0; i < 3; i++) {
-				if (protocol_getRxData(i) == 1) 
-				     { data.trackState[i] = 1;}
-				else
-				     { data.trackState[i] = 0;} //здесь можно поставить флаг отсутствия связи с гусеницей
+				data.trackState[i] = protocol_getRxData(i); //здесь можно поставить флаг отсутствия связи с гусеницей
 				data.reg[i] = protocol_regs(i);
 			}
 			udp_Pack.pac_type = 0;

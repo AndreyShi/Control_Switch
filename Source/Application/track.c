@@ -40,7 +40,7 @@ void track_update_speed(uint16_t speed, float* kSpeed) {
 		track_data.modbus_adr = FIRST_MODBUS_ADR + j;
 		cSpeed=(float) speed * kSpeed[j] + 0.5;
 		siPtr[0] = cSpeed;
-		for (int i = 0; i < 1; i++) {
+		for (int i = 0; i < 3; i++) {  //при одновременном включении CS и track ,track может медленее включитаться и не принять команду , поэтому 3 попытки
 			protocol_write();
 			delay = LocalTime + 100;
 			while (1) {
