@@ -42,13 +42,13 @@
 
 #if HEAD_PART==1
 #define FIRST_MODBUS_ADR	13
-#define LAST_MODBUS_ADR		13
+#define LAST_MODBUS_ADR		15
 #else
 #define FIRST_MODBUS_ADR	10
 #define LAST_MODBUS_ADR		12
 #endif
 
-#define TRACKS 1
+#define TRACKS 3
 
 /*Static IP ADDRESS: IP_ADDR0.IP_ADDR1.IP_ADDR2.IP_ADDR3 */
 #define IP_ADDR0   192

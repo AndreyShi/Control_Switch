@@ -97,7 +97,7 @@ tack_regs_t protocol_regs(uint32_t num){
 
 int protocol_getRxData(int track){
 	if (rx_flag[track]==1){
-		rx_flag[track]=0;
+		//rx_flag[track]=0;
 		return 1;
 	}
 	return 0;
@@ -185,6 +185,7 @@ protocol_state_t protocol_process(void) {
 				} else {
 					encoder[dev_adr-FIRST_MODBUS_ADR] = 0;
 					trackState[dev_adr-FIRST_MODBUS_ADR] = 0;
+					rx_flag[dev_adr-FIRST_MODBUS_ADR]=0;
 					dev_adr++;
 					if (dev_adr > LAST_MODBUS_ADR) {
 						p_state = pm_ready;

@@ -208,20 +208,11 @@ void xMBPortSerial_IRQHandler(void) {
 	}
 	if ((isrflags & USART_SR_TXE) != RESET) {
 		extern volatile USHORT usMasterSndBufferCount;		
-
-		if(usMasterSndBufferCount > 0)
-		    {set_test_i(usMasterSndBufferCount);}
-		else
-		    {set_test_i(-1);}
+		set_test_i(usMasterSndBufferCount);
 
 		if( usMasterSndBufferCount == 0 )
-		    {
-				CLEAR_BIT(RS485_PORT->CR1, USART_CR1_TXEIE);
-			}
-		else
-		    {
-				USART_ClearFlag(RS485_PORT, USART_FLAG_TXE);
-			}
+		    {CLEAR_BIT(RS485_PORT->CR1, USART_CR1_TXEIE);}
+			
 		pxMBMasterFrameCBTransmitterEmpty();
 	}
 }

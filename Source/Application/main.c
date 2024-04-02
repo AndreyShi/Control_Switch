@@ -312,13 +312,11 @@ int main(void) {
 			data.Vin_min = getVmin();
 
 			for (int i = 0; i < 3; i++) {
-				if (protocol_getRxData(i) == 1) {
-					data.reg[i] = protocol_regs(i);
-					data.trackState[i] = 1;
-				}else{
-					data.trackState[i] = 0; //здесь можно поставить флаг отсутствия связи с гусеницей
-				}
-
+				if (protocol_getRxData(i) == 1) 
+				     { data.trackState[i] = 1;}
+				else
+				     { data.trackState[i] = 0;} //здесь можно поставить флаг отсутствия связи с гусеницей
+				data.reg[i] = protocol_regs(i);
 			}
 			udp_Pack.pac_type = 0;
 			for (int i = 0; i < sizeof(data); i++) {
