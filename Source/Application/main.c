@@ -45,6 +45,7 @@
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 #define SYSTEMTICK_PERIOD_MS  1
+#define UDP_PACKET_SEND_TIME  20
 
 typedef struct {
 	uint32_t pac_type;
@@ -321,7 +322,7 @@ int main(void) {
 			}
 			data.coef = coef;
 			udp_sendBuf((uint8_t*) &udp_Pack);
-			readTime = getTime_ms() + 20;
+			readTime = getTime_ms() + UDP_PACKET_SEND_TIME;
 		}
 	}
 }
