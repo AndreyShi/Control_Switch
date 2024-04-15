@@ -41,7 +41,7 @@ static uint32_t repeat_count;
 static uint16_t dev_adr = FIRST_MODBUS_ADR;
 extern void xMBPortSerial_IRQHandler(void);
 static int32_t encoder[3];
-static uint32_t trackState[3]={0,0,0};
+static uint32_t trackState_u32[3]={0,0,0};
 
 static uint16_t regAdr;
 static uint16_t regSize;
@@ -96,9 +96,13 @@ uint32_t protocol_getSensState(uint32_t num){
 tack_regs_t protocol_regs(uint32_t num){
 	return regs[num];
 }
-
+/*
+return int :
+2 - связь с гусеницей отсутствует
+3 - связь с гусеницей ОК
+*/
 int protocol_getRxData(int track){
-	return rx_flag[track];
+	return rx_flag[track] ? 3 : 2;
 }
 
 bool protocol_write(void) {
@@ -182,7 +186,7 @@ protocol_state_t protocol_process(void) {
 					delay_time = getTime_ms() + REPEAT_TIME;
 				} else {
 					encoder[dev_adr-FIRST_MODBUS_ADR] = 0;
-					trackState[dev_adr-FIRST_MODBUS_ADR] = 0;
+					trackState_u32[dev_adr-FIRST_MODBUS_ADR] = 0;
 					rx_flag[dev_adr-FIRST_MODBUS_ADR]=0;
 					dev_adr++;
 					if (dev_adr > LAST_MODBUS_ADR) {
@@ -219,9 +223,9 @@ protocol_state_t protocol_process(void) {
 			p_state = pm_ready;
 		}else if (eMBMasterWaitRequestFinish() != MB_MRE_MASTER_BUSY) {
 			if (getTime_ms() >= delay_time) {
-				trackState[0] = 0;
-				trackState[1] = 0;
-				trackState[2] = 0;
+				trackState_u32[0] = 0;
+				trackState_u32[1] = 0;
+				trackState_u32[2] = 0;
 				p_state = pm_stopped;
 			}
 		}

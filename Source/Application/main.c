@@ -41,6 +41,7 @@
 #include "protocol.h"
 #include "stm32f4x7_eth.h"
 #include "track.h"
+#include "track_energy.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -297,6 +298,12 @@ int main(void) {
 			track_update_Ilimit(coef.cur_limit_mA);
 		}
 
+		if(update_track_energy_io)
+		{
+			update_track_energy_io = false;
+			track_energy_switch();
+		}
+
 		//потеря связи с ПК
 		if (wait_cmd_time > 2000) {
 			wait_cmd_time = 0;
@@ -408,6 +415,11 @@ void udp_receive_callback(void *arg, struct udp_pcb *upcb, struct pbuf *p,
 	} else if (motor_pack->type == 0x10000001) {
 		memcpy((char*) &coef, &rxData[4], sizeof(coef));
 		updateCoefFlag = true;
+	} else if (motor_pack->type == 0x10000002) {
+		track_on[0]=rxData[4];
+		track_on[1]=rxData[5];
+		track_on[2]=rxData[6];
+		update_track_energy_io = true;
 	} else if (motor_pack->type == 0x20000001) {
 		active_cmd=cmd_scanFwd;
 	} else if (motor_pack->type == 0x20000000) {
