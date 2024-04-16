@@ -35,7 +35,7 @@
 
 /* ----------------------- static functions ---------------------------------*/
 
-
+/*
 char isr_test[1000];
 int isr_test_i;
 
@@ -43,7 +43,7 @@ int isr_test_i;
 if(isr_test_i < 1000)           \
 {isr_test[isr_test_i++] = x;}   \
 }while(0);                      \
-
+*/
 
 
 
@@ -195,20 +195,20 @@ void xMBPortSerial_IRQHandler(void) {
 	if ((isrflags & USART_SR_RXNE) != RESET) {
 		//USART_ClearITPendingBit( USART3, USART_IT_RXNE );
 		pxMBMasterFrameCBByteReceived();
-		set_test_i('b');
+		//set_test_i('b');
 		return;
 	}
 	if ((isrflags & USART_SR_TC) != RESET) {
 		/* Clear the TC flag in the SR register by writing 0 to it */
 		USART_ClearFlag(RS485_PORT, USART_FLAG_TC);
 		//pxMBFrameCBTransmitterEmpty();
-		set_test_i('a');
+		//set_test_i('a');
 		vMBMasterPortSerialEnable( TRUE, FALSE);
 		return;
 	}
 	if ((isrflags & USART_SR_TXE) != RESET) {
 		extern volatile USHORT usMasterSndBufferCount;		
-		set_test_i(usMasterSndBufferCount);
+		//set_test_i(usMasterSndBufferCount);
 
 		if( usMasterSndBufferCount == 0 )
 		    {CLEAR_BIT(RS485_PORT->CR1, USART_CR1_TXEIE);}
