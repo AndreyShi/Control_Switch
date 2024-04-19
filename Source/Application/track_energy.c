@@ -1,10 +1,13 @@
 #include "track_energy.h"
-#include "stm32f4xx.h"
 #include <string.h>
+#include "main.h"
 
 uint8_t track_on[3];
 static uint8_t track_energy_pin[3];
 bool update_track_energy_io;
+
+//calcultate bin from current,  x - Ampers
+#define CALC_CURRENT_(x)  (uint16_t)((0.1F * x) * (4096.F/3.3))
 
 void init_track_energy_gpio(void)
 {
@@ -40,66 +43,80 @@ void track_energy_switch(void)
 
 void init_track_analog_watch_gpio(void)
 {
+  
     GPIO_InitTypeDef GPIO_InitStruct = {0};
-    //__HAL_RCC_ADC3_CLK_ENABLE();
-    //__HAL_RCC_GPIOF_CLK_ENABLE();
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC3, ENABLE);
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOF, ENABLE);
-    /**ADC3 GPIO Configuration
-    PF8     ------> ADC3_IN6
-    PF9     ------> ADC3_IN7
-    PF10     ------> ADC3_IN8
-    */
-    GPIO_InitStruct.Pin = GPIO_Pin_8|GPIO_Pin_9|GPIO_Pin_10;
-    GPIO_InitStruct.Mode = GPIO_Mode_AN;
-    GPIO_InitStruct.Pull = GPIO_PuPd_NOPULL;
+    //ADC3 GPIO Configuration
+    //PF8     ------> ADC3_IN6
+    //PF9     ------> ADC3_IN7
+    //PF10     ------> ADC3_IN8
+    
+    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_8|GPIO_Pin_9|GPIO_Pin_10;
+    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AN;
+    GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
     GPIO_Init(GPIOF, &GPIO_InitStruct);
 
-  ADC_AnalogWDGConfTypeDef AnalogWDGConfig = {0};
-  ADC_ChannelConfTypeDef sConfig = {0};
-  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
-  */
-  hadc3.Instance = ADC3;
-  hadc3.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
-  hadc3.Init.Resolution = ADC_RESOLUTION_12B;
-  hadc3.Init.ScanConvMode = DISABLE;
-  hadc3.Init.ContinuousConvMode = DISABLE;
-  hadc3.Init.DiscontinuousConvMode = DISABLE;
-  hadc3.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc3.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-  hadc3.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc3.Init.NbrOfConversion = 1;
-  hadc3.Init.DMAContinuousRequests = DISABLE;
-  hadc3.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
-  if (HAL_ADC_Init(&hadc3) != HAL_OK)
-  {
-    Error_Handler();
-  }
+    /* Initialization and Configuration functions *********************************/
+    ADC_TypeDef* ADCx = ADC3;
+    ADC_InitTypeDef ADC_InitStruct = {
+      .ADC_ContinuousConvMode = ENABLE,
+      .ADC_DataAlign = ADC_DataAlign_Right,
+      .ADC_ExternalTrigConv = ADC_ExternalTrigConv_T1_CC1,
+      .ADC_ExternalTrigConvEdge = ADC_ExternalTrigConvEdge_None,
+      .ADC_NbrOfConversion = 3,
+      .ADC_Resolution = ADC_Resolution_12b,
+      .ADC_ScanConvMode = ENABLE,  
+      };
+    ADC_CommonInitTypeDef ADC_CommonInitStruct = {
+      .ADC_DMAAccessMode = ADC_DMAAccessMode_Disabled,
+      .ADC_Mode = ADC_Mode_Independent ,
+      .ADC_Prescaler = ADC_Prescaler_Div8,
+      .ADC_TwoSamplingDelay = ADC_TwoSamplingDelay_20Cycles
+    };
 
-  /** Configure the analog watchdog
-  */
-  AnalogWDGConfig.WatchdogMode = ADC_ANALOGWATCHDOG_SINGLE_REG;
-  AnalogWDGConfig.HighThreshold = 0;
-  AnalogWDGConfig.LowThreshold = 0;
-  AnalogWDGConfig.Channel = ADC_CHANNEL_8;
-  AnalogWDGConfig.ITMode = DISABLE;
-  if (HAL_ADC_AnalogWDGConfig(&hadc3, &AnalogWDGConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
+    ADC_Init(ADCx, &ADC_InitStruct);
+    ADC_CommonInit(&ADC_CommonInitStruct);
 
-  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
-  */
-  sConfig.Channel = ADC_CHANNEL_8;
-  sConfig.Rank = 1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
-  if (HAL_ADC_ConfigChannel(&hadc3, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-}
+    /* Analog Watchdog configuration functions ************************************/
+    ADC_AnalogWatchdogCmd(ADCx, ADC_AnalogWatchdog_AllRegEnable);
+    ADC_AnalogWatchdogThresholdsConfig(ADCx, CALC_CURRENT_(3), 0);
+    
+    /* Regular Channels Configuration functions ***********************************/
+    ADC_RegularChannelConfig(ADCx, ADC_Channel_6, 1, ADC_SampleTime_480Cycles);
+    ADC_RegularChannelConfig(ADCx, ADC_Channel_7, 2, ADC_SampleTime_480Cycles);
+    ADC_RegularChannelConfig(ADCx, ADC_Channel_8, 3, ADC_SampleTime_480Cycles);
+
+    ADC_EOCOnEachRegularChannelCmd(ADCx, DISABLE);
+
+    ADC_ITConfig(ADCx, ADC_IT_AWD, ENABLE);
+    /* Enable the ADCx Interrupt */
+    NVIC_InitTypeDef NVIC_InitStructure;
+	NVIC_InitStructure.NVIC_IRQChannel = ADC_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure);
+
+    ADC_Cmd(ADCx, ENABLE);
+    Delay_ms(2);// adc stabilize
+    ADC_SoftwareStartConv(ADCx);
+};
 
 void analog_watchdogs(void)
 {
+  ADC_TypeDef* ADCx = ADC3;
 
-}
+  if(ADC_GetITStatus(ADCx, ADC_IT_AWD) != RESET)
+  {
+    if(ADC_GetFlagStatus(ADCx, ADC_FLAG_AWD))
+    {
+      /* Clear the ADC analog watchdog flag */
+      // TO DO  switch off track
+      ADC_ClearFlag(ADCx, ADC_FLAG_AWD);
+    }
+  }
+};
+
+
+

@@ -128,6 +128,7 @@ int main(void) {
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOI, ENABLE);
 	//lsm330_setup(LSM330_GYR_FS_250DPS, LSM330_ACC_G_2G);
 	Delay_ms(100);
+    init_track_energy_gpio();
 
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
@@ -140,14 +141,14 @@ int main(void) {
 
 
 	//TEST PIN
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_Init(GPIOF, &GPIO_InitStructure);
+	//GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
+	//GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+	//GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	//GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+	//GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	//GPIO_Init(GPIOF, &GPIO_InitStructure);
 	//TEST PIN
-	GPIO_ResetBits(GPIOF, GPIO_Pin_4);
+	//GPIO_ResetBits(GPIOF, GPIO_Pin_4);
 
 
 	Delay_ms(10);
@@ -234,7 +235,7 @@ int main(void) {
 			break;
 		case cmd_stop:
 			//TEST PIN
-			GPIO_ResetBits(GPIOF, GPIO_Pin_4);
+			//GPIO_ResetBits(GPIOF, GPIO_Pin_4);
 			track_stop();
 			active_cmd = cmd_na;
 			break;
@@ -264,7 +265,7 @@ int main(void) {
 			break;
 		case cmd_moveFwd:
 			//TEST PIN
-			GPIO_SetBits(GPIOF, GPIO_Pin_4);
+			//GPIO_SetBits(GPIOF, GPIO_Pin_4);
 			if (track_move_speed != coef.move_speed) {
 				track_move_speed = coef.move_speed;
 				track_update_speed(track_move_speed, coef.kSpeed);

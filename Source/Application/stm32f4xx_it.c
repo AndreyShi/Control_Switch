@@ -29,6 +29,7 @@
 #include "stm32f4xx.h"
 #include "main.h"
 #include "protocol.h"
+#include "track_energy.h"
 
 extern volatile uint32_t wait_cmd_time;
 extern void motor_adc_int_handler(void);
@@ -144,7 +145,9 @@ void USARTx_IRQHandler(void) {
 	protocol_IRQHandler();
 }
 
-
+void ADC_IRQHandler(void){
+	analog_watchdogs();
+}
 
 
 
