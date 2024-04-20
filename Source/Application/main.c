@@ -129,7 +129,7 @@ int main(void) {
 	//lsm330_setup(LSM330_GYR_FS_250DPS, LSM330_ACC_G_2G);
 	Delay_ms(100);
     init_track_energy_gpio();
-    init_track_analog_watch_gpio();
+    init_track_analog_watchdog();
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
@@ -225,7 +225,7 @@ int main(void) {
 
 	while (1) {
 
-
+        change_analog_watchdog_channel();
 		protocol_process();
 
 
@@ -321,7 +321,12 @@ int main(void) {
 			data.Vin_min = getVmin();
 
 			for (int i = 0; i < 3; i++) {
-				data.trackState[i] = protocol_getRxData(i); //здесь можно поставить флаг отсутствия связи с гусеницей
+				if(track_on[i] == 2)
+				    { data.trackState[i] = 1;} // превышение тока гусенцы
+				else if(track_on[i] == 0)
+				    { data.trackState[i] = 0;} // гусеница отключена
+				else
+				    { data.trackState[i] = protocol_getRxData(i);} //здесь можно поставить флаг отсутствия связи с гусеницей
 				data.reg[i] = protocol_regs(i);
 			}
 			udp_Pack.pac_type = 0;

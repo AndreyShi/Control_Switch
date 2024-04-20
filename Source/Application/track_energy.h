@@ -14,9 +14,10 @@ void init_track_energy_gpio(void);
 void track_energy_switch(void);
 /*
 init PF8(track1), PF9(track2), PF10(track3) as ADC input, and start 
-monitoring current driver analog_watchdogs
+monitoring current driver analog_watchdogs_IT
 */
-void init_track_analog_watch_gpio(void);
-void analog_watchdogs(void);
+void init_track_analog_watchdog(void);
+void analog_watchdogs_IT(void);
+void change_analog_watchdog_channel(void);
 
 #endif // !1

@@ -2,28 +2,24 @@
 #include <string.h>
 #include "main.h"
 
-uint8_t track_on[3];
-static uint8_t track_energy_pin[3];
+uint8_t track_on[3] = {0,0,0};
+uint8_t track_energy_pin[3] = { GPIO_Pin_2, GPIO_Pin_3, GPIO_Pin_4 };
 bool update_track_energy_io;
+uint8_t ain_chan[3] = { ADC_Channel_6, ADC_Channel_7, ADC_Channel_8 };
+uint8_t inc_ch;
+ADC_TypeDef* ADCx = ADC3;
 
 //calcultate bin from current,  x - Ampers
 #define CALC_CURRENT_(x)  (uint16_t)((0.1F * x) * (4096.F/3.3))
-
-static void reset_all_pin(void)
-{
-   memset(track_on,0,3);
-   GPIO_ResetBits(GPIOF, GPIO_Pin_2 | GPIO_Pin_3 | GPIO_Pin_4);
-}
+/* ADC AWDCH mask */
+#define CR1_AWDCH_MASK           ((uint32_t)0x1F)  
 
 void init_track_energy_gpio(void)
 {
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOF, ENABLE);
-    track_energy_pin[0] = GPIO_Pin_2;
-    track_energy_pin[1] = GPIO_Pin_3;
-    track_energy_pin[2] = GPIO_Pin_4;
-
     GPIO_InitTypeDef GPIO_InitStructure = {0};
-    reset_all_pin();
+
+    GPIO_ResetBits(GPIOF, GPIO_Pin_2 | GPIO_Pin_3 | GPIO_Pin_4);
 
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2 | GPIO_Pin_3 | GPIO_Pin_4;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
@@ -38,7 +34,7 @@ void track_energy_switch(void)
 {
     for(int i = 0; i < 3; i++)
     {
-        if(track_on[i])
+        if(track_on[i] == 1)
             { GPIO_SetBits(GPIOF, track_energy_pin[i]);}
         else
             { GPIO_ResetBits(GPIOF, track_energy_pin[i]);}
@@ -46,9 +42,8 @@ void track_energy_switch(void)
     return;
 }
 
-void init_track_analog_watch_gpio(void)
+void init_track_analog_watchdog(void)
 {
-  
     GPIO_InitTypeDef GPIO_InitStruct = {0};
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC3, ENABLE);
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOF, ENABLE);
@@ -63,7 +58,6 @@ void init_track_analog_watch_gpio(void)
     GPIO_Init(GPIOF, &GPIO_InitStruct);
 
     /* Initialization and Configuration functions *********************************/
-    ADC_TypeDef* ADCx = ADC3;
     ADC_InitTypeDef ADC_InitStruct = {
       .ADC_ContinuousConvMode = ENABLE,
       .ADC_DataAlign = ADC_DataAlign_Right,
@@ -84,13 +78,14 @@ void init_track_analog_watch_gpio(void)
     ADC_CommonInit(&ADC_CommonInitStruct);
 
     /* Analog Watchdog configuration functions ************************************/
-    ADC_AnalogWatchdogCmd(ADCx, ADC_AnalogWatchdog_AllRegEnable);
+    ADC_AnalogWatchdogCmd(ADCx, ADC_AnalogWatchdog_SingleRegEnable);
     ADC_AnalogWatchdogThresholdsConfig(ADCx, CALC_CURRENT_(3), 0);
+    ADC_AnalogWatchdogSingleChannelConfig(ADCx, ain_chan[0]);
     
     /* Regular Channels Configuration functions ***********************************/
-    ADC_RegularChannelConfig(ADCx, ADC_Channel_6, 1, ADC_SampleTime_480Cycles);
-    ADC_RegularChannelConfig(ADCx, ADC_Channel_7, 2, ADC_SampleTime_480Cycles);
-    ADC_RegularChannelConfig(ADCx, ADC_Channel_8, 3, ADC_SampleTime_480Cycles);
+    ADC_RegularChannelConfig(ADCx, ain_chan[0], 1, ADC_SampleTime_480Cycles);
+    ADC_RegularChannelConfig(ADCx, ain_chan[1], 2, ADC_SampleTime_480Cycles);
+    ADC_RegularChannelConfig(ADCx, ain_chan[2], 3, ADC_SampleTime_480Cycles);
 
     ADC_EOCOnEachRegularChannelCmd(ADCx, DISABLE);
 
@@ -108,16 +103,31 @@ void init_track_analog_watch_gpio(void)
     ADC_SoftwareStartConv(ADCx);
 };
 
-void analog_watchdogs(void)
+void change_analog_watchdog_channel(void)
 {
-  ADC_TypeDef* ADCx = ADC3;
+  ADC_AnalogWatchdogSingleChannelConfig(ADCx, ain_chan[inc_ch]);
+  if(inc_ch < 2)
+    {inc_ch++;}
+  else
+    {inc_ch = 0;}
+}
 
+void analog_watchdogs_IT(void)
+{
   if(ADC_GetITStatus(ADCx, ADC_IT_AWD) != RESET)
   {
     if(ADC_GetFlagStatus(ADCx, ADC_FLAG_AWD))
     {
-      /* Clear the ADC analog watchdog flag */      
-      reset_all_pin();// TO DO  switch off all track
+      const uint8_t cur_ain_ch = (uint8_t)(ADCx->CR1 & CR1_AWDCH_MASK);
+      for(int i = 0; i < 3;i++)
+      {
+          if(cur_ain_ch == ain_chan[i])
+          {
+              track_on[i] = 2;
+              GPIO_ResetBits(GPIOF, track_energy_pin[i]);
+          }
+      }      
+      /* Clear the ADC analog watchdog flag */
       ADC_ClearFlag(ADCx, ADC_FLAG_AWD);
     }
   }

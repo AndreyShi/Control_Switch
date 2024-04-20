@@ -146,7 +146,7 @@ void USARTx_IRQHandler(void) {
 }
 
 void ADC_IRQHandler(void){
-	analog_watchdogs();
+	analog_watchdogs_IT();
 }
 
 
