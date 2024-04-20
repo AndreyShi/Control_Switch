@@ -129,7 +129,7 @@ int main(void) {
 	//lsm330_setup(LSM330_GYR_FS_250DPS, LSM330_ACC_G_2G);
 	Delay_ms(100);
     init_track_energy_gpio();
-
+    init_track_analog_watch_gpio();
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;

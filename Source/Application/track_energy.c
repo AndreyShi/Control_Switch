@@ -9,16 +9,21 @@ bool update_track_energy_io;
 //calcultate bin from current,  x - Ampers
 #define CALC_CURRENT_(x)  (uint16_t)((0.1F * x) * (4096.F/3.3))
 
+static void reset_all_pin(void)
+{
+   memset(track_on,0,3);
+   GPIO_ResetBits(GPIOF, GPIO_Pin_2 | GPIO_Pin_3 | GPIO_Pin_4);
+}
+
 void init_track_energy_gpio(void)
 {
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOF, ENABLE);
-    memset(track_on,0,3);
     track_energy_pin[0] = GPIO_Pin_2;
     track_energy_pin[1] = GPIO_Pin_3;
     track_energy_pin[2] = GPIO_Pin_4;
 
     GPIO_InitTypeDef GPIO_InitStructure = {0};
-    GPIO_ResetBits(GPIOF, GPIO_Pin_2 | GPIO_Pin_3 | GPIO_Pin_4);
+    reset_all_pin();
 
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2 | GPIO_Pin_3 | GPIO_Pin_4;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
@@ -92,11 +97,11 @@ void init_track_analog_watch_gpio(void)
     ADC_ITConfig(ADCx, ADC_IT_AWD, ENABLE);
     /* Enable the ADCx Interrupt */
     NVIC_InitTypeDef NVIC_InitStructure;
-	NVIC_InitStructure.NVIC_IRQChannel = ADC_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&NVIC_InitStructure);
+	  NVIC_InitStructure.NVIC_IRQChannel = ADC_IRQn;
+	  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;
+	  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+	  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	  NVIC_Init(&NVIC_InitStructure);
 
     ADC_Cmd(ADCx, ENABLE);
     Delay_ms(2);// adc stabilize
@@ -111,8 +116,8 @@ void analog_watchdogs(void)
   {
     if(ADC_GetFlagStatus(ADCx, ADC_FLAG_AWD))
     {
-      /* Clear the ADC analog watchdog flag */
-      // TO DO  switch off track
+      /* Clear the ADC analog watchdog flag */      
+      reset_all_pin();// TO DO  switch off all track
       ADC_ClearFlag(ADCx, ADC_FLAG_AWD);
     }
   }
