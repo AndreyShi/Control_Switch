@@ -3,7 +3,7 @@
 #include "main.h"
 
 uint8_t track_on[3] = {0,0,0};
-uint8_t track_energy_pin[3] = { GPIO_Pin_2, GPIO_Pin_3, GPIO_Pin_4 };
+uint16_t track_energy_pin[3] = { GPIO_Pin_2, GPIO_Pin_3, GPIO_Pin_4 };
 bool update_track_energy_io;
 uint8_t ain_chan[3] = { ADC_Channel_6, ADC_Channel_7, ADC_Channel_8 };
 uint8_t inc_ch;

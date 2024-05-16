@@ -319,6 +319,7 @@ int main(void) {
 			data.gY = scaledAccelY_;
 			data.gZ = scaledAccelZ_;
 			data.Vin_min = getVmin();
+			data.BoardState = -1;
 
 			for (int i = 0; i < 3; i++) {
 				if(track_on[i] == 2)
@@ -407,7 +408,7 @@ void udp_sendBuf(char* udpTxBuf) {
 void udp_receive_callback(void *arg, struct udp_pcb *upcb, struct pbuf *p,
 		struct ip_addr *addr, u16_t port) {
 	udp_motor_pack_type* motor_pack;
-	uint8_t rxData[1200];
+	uint8_t rxData[1200] = {0};
 	wait_cmd_time = 0;
 	rxByteCount = p->tot_len;
 	MEMCPY((char* )rxData, p->payload, rxByteCount);
